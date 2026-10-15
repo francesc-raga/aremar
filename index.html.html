@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="ca" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crivit Water Rower 12L - Dashboard d'Entrenament</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #0284c7 0%, #0369a1 38%, #075985 75%, #0c4a6e 100%);
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100dvh;
+            width: 100dvw;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for compact blocks */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 89, 133, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.55);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(250, 204, 21, 0.8);
+        }
+
+        /* Water & Festive glow effects */
+        .water-glow {
+            box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.5);
+        }
+        .drive-glow {
+            box-shadow: 0 0 35px 4px rgba(251, 146, 60, 0.75);
+            border-color: #fb923c !important;
+        }
+        .recovery-glow {
+            box-shadow: 0 0 30px 2px rgba(34, 211, 238, 0.65);
+            border-color: #22d3ee !important;
+        }
+
+        /* Underwater Sun Rays */
+        .sun-rays {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                112deg,
+                rgba(255, 255, 255, 0.10) 0%,
+                rgba(255, 255, 255, 0.03) 7%,
+                transparent 12%,
+                transparent 22%
+            );
+            pointer-events: none;
+            z-index: 1;
+            animation: raysSway 10s ease-in-out infinite alternate;
+        }
+        @keyframes raysSway {
+            0% { transform: scale(1.05) rotate(-1deg); opacity: 0.75; }
+            100% { transform: scale(1.12) rotate(1.5deg); opacity: 1; }
+        }
+
+        /* Floating Bubbles */
+        .bubble {
+            position: absolute;
+            bottom: -40px;
+            border-radius: 9999px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85), rgba(125, 211, 252, 0.25));
+            box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            z-index: 2;
+            animation: riseUp linear infinite;
+        }
+        @keyframes riseUp {
+            0% { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+            15% { opacity: 0.75; }
+            85% { opacity: 0.75; }
+            100% { transform: translateY(-110dvh) translateX(28px) scale(1.15); opacity: 0; }
+        }
+
+        /* Swimming Tropical Fish */
+        .fish-swim-right {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+            animation: swimRight linear infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+        }
+        .fish-swim-left {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+            animation: swimLeft linear infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+        }
+        @keyframes swimRight {
+            0% { transform: translateX(-15vw) translateY(0px) scaleX(-1); }
+            50% { transform: translateX(50vw) translateY(-14px) scaleX(-1); }
+            100% { transform: translateX(115vw) translateY(4px) scaleX(-1); }
+        }
+        @keyframes swimLeft {
+            0% { transform: translateX(115vw) translateY(0px); }
+            50% { transform: translateX(50vw) translateY(12px); }
+            100% { transform: translateX(-15vw) translateY(-6px); }
+        }
+
+        /* Swaying Seaweed */
+        .seaweed {
+            transform-origin: bottom center;
+            animation: swayWeed 4.5s ease-in-out infinite alternate;
+        }
+        @keyframes swayWeed {
+            0% { transform: rotate(-6deg); }
+            100% { transform: rotate(7deg); }
+        }
+
+        /* Glass Marine Panel */
+        .marine-panel {
+            background: linear-gradient(145deg, rgba(8, 47, 73, 0.78), rgba(12, 74, 110, 0.72));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(125, 211, 252, 0.35);
+            box-shadow: 0 10px 30px -5px rgba(3, 105, 161, 0.45);
+        }
+
+        /* Portrait warning overlay for small mobile screens in vertical mode */
+        @media screen and (orientation: portrait) and (max-width: 767px) {
+            #portrait-hint {
+                display: flex !important;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between text-white select-none">
+
+    <!-- ESCENARI DE FONS MARÍ ANIMAT -->
+    <div class="sun-rays"></div>
+    <div id="ocean-decor" class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <!-- Bombolles marines -->
+        <div class="bubble w-3 h-3 left-[8%]" style="animation-duration: 7s; animation-delay: 0s;"></div>
+        <div class="bubble w-5 h-5 left-[18%]" style="animation-duration: 9s; animation-delay: 1.5s;"></div>
+        <div class="bubble w-2.5 h-2.5 left-[32%]" style="animation-duration: 6.5s; animation-delay: 3s;"></div>
+        <div class="bubble w-6 h-6 left-[48%]" style="animation-duration: 11s; animation-delay: 0.8s;"></div>
+        <div class="bubble w-3.5 h-3.5 left-[64%]" style="animation-duration: 8s; animation-delay: 2.2s;"></div>
+        <div class="bubble w-4 h-4 left-[79%]" style="animation-duration: 9.5s; animation-delay: 4s;"></div>
+        <div class="bubble w-5 h-5 left-[91%]" style="animation-duration: 7.5s; animation-delay: 1.1s;"></div>
+
+        <!-- Peixos tropicals i fauna marina -->
+        <div class="fish-swim-right text-2xl top-[18%]" style="animation-duration: 22s; animation-delay: 0s;">🐠</div>
+        <div class="fish-swim-left text-xl top-[34%]" style="animation-duration: 26s; animation-delay: 4s;">🐟</div>
+        <div class="fish-swim-right text-3xl top-[62%]" style="animation-duration: 30s; animation-delay: 2s;">🐢</div>
+        <div class="fish-swim-left text-2xl top-[76%]" style="animation-duration: 19s; animation-delay: 7s;">🐡</div>
+        <div class="fish-swim-right text-xl top-[48%]" style="animation-duration: 24s; animation-delay: 11s;">🐬</div>
+
+        <!-- Coralls, algues i sorra al fons -->
+        <svg class="absolute bottom-0 left-0 w-full h-20 opacity-50" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <!-- Duna de sorra daurada submarina -->
+            <path fill="#0369a1" fill-opacity="0.6" d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
+            <path fill="#ca8a04" fill-opacity="0.35" d="M0,96L120,90.7C240,85,480,75,720,80C960,85,1200,107,1320,112L1440,117L1440,120L0,120Z"></path>
+        </svg>
+        <div class="absolute bottom-1 left-6 text-2xl opacity-70 seaweed">🌿</div>
+        <div class="absolute bottom-1 left-20 text-xl opacity-65">🪸</div>
+        <div class="absolute bottom-0 left-1/3 text-2xl opacity-60 seaweed" style="animation-delay: 1s;">🌿</div>
+        <div class="absolute bottom-1 left-1/2 text-lg opacity-65">🐚</div>
+        <div class="absolute bottom-1 right-1/4 text-2xl opacity-70">🪸</div>
+        <div class="absolute bottom-0 right-10 text-2xl opacity-70 seaweed" style="animation-delay: 1.8s;">🌿</div>
+        <div class="absolute bottom-1 right-28 text-lg opacity-75">⭐</div>
+    </div>
+
+    <!-- Banner flotant de Festa / Bloc Superat -->
+    <div id="celebration-toast" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-50 px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-cyan-400 text-slate-950 font-black text-xs sm:text-sm shadow-2xl border-2 border-white flex items-center gap-2 animate-bounce">
+        <span>🎆</span>
+        <span id="celebration-toast-text"> PROVA SUPERADA! BONA PALADA! </span>
+        <span>🎉</span>
+    </div>
+
+    <!-- Avís de rotació (es pot tancar si es vol usar igualment) -->
+    <div id="portrait-hint" class="hidden fixed inset-0 z-50 bg-sky-950/95 backdrop-blur-md flex-col items-center justify-center p-6 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-400/20 border border-amber-300/50 flex items-center justify-center mb-4 animate-bounce">
+            <i data-lucide="smartphone" class="w-8 h-8 text-amber-300 rotate-90"></i>
+        </div>
+        <h2 class="text-xl font-extrabold text-white mb-2">Gira el mòbil en horitzontal 🌊</h2>
+        <p class="text-sm text-sky-100 max-w-xs mb-6">
+            Aquesta interfície festiva del fons marí està dissenyada per posar-se al suport de la teva <strong>Crivit Water Rower</strong> en format apaïsat.
+        </p>
+        <button onclick="document.getElementById('portrait-hint').style.setProperty('display', 'none', 'important')" 
+                class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-xs font-black text-slate-950 shadow-lg">
+            Continuar en vertical igualment
+        </button>
+    </div>
+
+    <!-- Barra Superior Compacta i Alegre -->
+    <header class="h-12 shrink-0 bg-sky-950/75 backdrop-blur-md border-b border-cyan-300/30 px-3 flex items-center justify-between gap-2 z-20">
+        <!-- Brand & Perfil -->
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 flex items-center justify-center shadow-md shadow-orange-500/30 border border-white/40">
+                <i data-lucide="waves" class="w-4 h-4 text-white"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <span class="font-black text-xs sm:text-sm tracking-tight text-white drop-shadow">🐠 CRIVIT OCEAN 12L</span>
+                    <span class="hidden md:inline-block text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-400/25 text-amber-200 border border-amber-300/50">FESTA AQUÀTICA</span>
+                </div>
+                <p class="text-[10px] text-cyan-200 leading-none hidden sm:block">Home · 184 cm · 96 kg · Crema Panxa + Core 🌊</p>
+            </div>
+        </div>
+
+        <!-- Selector de Dia / Vista -->
+        <div class="flex items-center bg-sky-950/90 p-1 rounded-xl border border-cyan-400/30">
+            <button id="tab-day1" onclick="selectDay(1)" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 shadow">
+                <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                <span>Dia 1: HIIT + Core</span>
+            </button>
+            <button id="tab-day2" onclick="selectDay(2)" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 text-cyan-100 hover:text-white">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span>Dia 2: Piràmide + Abs</span>
+            </button>
+            <button id="tab-calendar" onclick="toggleModal('calendar-modal')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 text-amber-300 hover:bg-sky-800/60">
+                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                <span>Dies</span>
+                <span id="header-progress-badge" class="px-1.5 py-0.2 rounded-md bg-amber-400/25 border border-amber-300/50 text-[10px] mono text-amber-200">0/16</span>
+            </button>
+            <button id="tab-guide" onclick="toggleModal('core-modal')" class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 text-emerald-300 hover:bg-sky-800/60">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span class="hidden md:inline">Tècnica</span>
+            </button>
+        </div>
+
+        <!-- Controls ràpids d'Àudio, Confeti i Pantalla -->
+        <div class="flex items-center gap-1.5">
+            <div id="kcal-badge" class="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/25 border border-orange-300/40 text-amber-200 text-xs font-extrabold mono">
+                <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span id="kcal-counter">0</span> kcal
+            </div>
+            <button onclick="launchCelebration('🎉 FESTA SUBMARINA! SEGUEIX REMANT! 🎆')" class="p-2 rounded-lg bg-pink-500/30 hover:bg-pink-500/50 text-amber-200 border border-pink-300/50 transition" title="Llançar Focs Artificials i Confeti!">
+                <i data-lucide="party-popper" class="w-4 h-4"></i>
+            </button>
+            <button id="btn-sound" onclick="toggleSound()" class="p-2 rounded-lg bg-sky-800/80 hover:bg-sky-700 text-cyan-200 border border-cyan-400/40 transition" title="Activar/Silenciar Bips">
+                <i id="icon-sound" data-lucide="volume-2" class="w-4 h-4"></i>
+            </button>
+            <button onclick="toggleFullscreen()" class="p-2 rounded-lg bg-sky-800/80 hover:bg-sky-700 text-cyan-100 border border-cyan-400/40 transition" title="Pantalla Completa">
+                <i data-lucide="maximize" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Cos Principal en Horitzontal (2 Columnes equilibrades) -->
+    <main class="flex-1 grid grid-cols-12 gap-2.5 p-2.5 overflow-hidden z-10">
+
+        <!-- COLUMNA ESQUERRA (7 cols): MESURADOR D'SPM, BARRA DE RITME I AUDIO BIP -->
+        <section class="col-span-12 sm:col-span-7 marine-panel rounded-2xl p-3 flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Capçalera del Mesurador SPM -->
+            <div class="flex items-center justify-between gap-2 z-10">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300 block">🌊 Metrònom Marí (12L Aigua)</span>
+                    <div class="flex items-baseline gap-2">
+                        <h2 id="phase-title" class="text-lg sm:text-xl font-black tracking-tight text-white drop-shadow">LLEST PER NAVEGAR! 🚣‍♂️</h2>
+                        <span id="phase-subtitle" class="text-xs font-semibold text-cyan-200">Ràtio 1:2 (1s Ona Forta / 2s Brisa)</span>
+                    </div>
+                </div>
+
+                <!-- Comptador gran SPM -->
+                <div class="flex items-center gap-2 bg-sky-950/85 px-3 py-1.5 rounded-xl border border-cyan-300/40 shadow-inner">
+                    <div class="text-right">
+                        <span class="text-2xl sm:text-3xl font-black mono text-amber-300 leading-none" id="spm-display">22</span>
+                        <span class="text-[10px] font-bold text-cyan-200 block leading-none">SPM (Palades/min)</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <button onclick="adjustSPM(1)" class="w-6 h-5 rounded bg-sky-800 hover:bg-amber-400 hover:text-slate-950 flex items-center justify-center text-white text-xs font-black transition">+</button>
+                        <button onclick="adjustSPM(-1)" class="w-6 h-5 rounded bg-sky-800 hover:bg-amber-400 hover:text-slate-950 flex items-center justify-center text-white text-xs font-black transition">-</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BARRA VISUAL D'EMPENTA I RETROCÉS -->
+            <div class="my-auto py-2 flex flex-col gap-2 z-10">
+                <!-- Indicadors de fase dalt de la barra -->
+                <div class="flex justify-between items-center text-[11px] font-extrabold px-1">
+                    <span id="badge-catch" class="text-cyan-200 flex items-center gap-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-300 inline-block shadow"></span>
+                        🐚 ATAC (Inici)
+                    </span>
+                    <span id="phase-instruction" class="text-xs sm:text-sm font-black px-3 py-0.5 rounded-full bg-sky-950/90 text-amber-200 border border-amber-300/40 shadow">
+                        Prem "Iniciar Sessió" o "Només Metrònom"
+                    </span>
+                    <span id="badge-finish" class="text-amber-300 flex items-center gap-1">
+                        FINAL (Abdomen fort!) 🔥
+                        <span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block shadow"></span>
+                    </span>
+                </div>
+
+                <!-- Contenidor de la Barra Aquàtica -->
+                <div id="pacer-track" class="relative h-14 sm:h-16 w-full rounded-2xl bg-sky-950/90 border-2 border-cyan-300/40 p-1.5 overflow-hidden flex items-center shadow-inner transition-all duration-300">
+                    <!-- Overlay de Compte Enrere 3s abans de cada bloc -->
+                    <div id="countdown-overlay" class="hidden absolute inset-0 z-30 bg-sky-950/95 backdrop-blur-sm flex items-center justify-center gap-3 px-4">
+                        <span class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">🌊 Preparat per a la següent ona:</span>
+                        <span id="countdown-number" class="text-3xl sm:text-4xl font-black mono text-white animate-bounce">3</span>
+                    </div>
+
+                    <!-- Marques de referència de fons -->
+                    <div class="absolute inset-0 grid grid-cols-3 pointer-events-none opacity-40">
+                        <div class="border-r border-dashed border-cyan-300/60 flex items-end justify-center pb-1 text-[9px] font-mono font-bold text-cyan-100">1. CAMES (33%)</div>
+                        <div class="border-r border-dashed border-cyan-300/60 flex items-end justify-center pb-1 text-[9px] font-mono font-bold text-cyan-100">2. TRONC / CORE (66%)</div>
+                        <div class="flex items-end justify-center pb-1 text-[9px] font-mono font-bold text-cyan-100">3. BRAÇOS AL PIT (100%)</div>
+                    </div>
+
+                    <!-- Barra d'ompliment dinàmica -->
+                    <div id="pacer-fill" class="h-full rounded-xl transition-none bg-gradient-to-r from-cyan-400 via-amber-400 to-orange-500 relative flex items-center justify-end pr-1.5" style="width: 8%;">
+                        <!-- Cursor lluminós amb icona festiva -->
+                        <div id="pacer-handle" class="w-6 h-10 rounded-lg bg-white shadow-lg border-2 border-amber-300 shrink-0 flex items-center justify-center text-xs">
+                            🚣
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de temps del cicle i estadístiques de palada -->
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                    <div class="bg-sky-950/75 border border-cyan-300/30 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                        <span class="text-[10px] text-cyan-200 font-bold">🔊 Bip Empenta</span>
+                        <span id="drive-time-label" class="text-xs font-extrabold mono text-amber-300">0.91s (Agut)</span>
+                    </div>
+                    <div class="bg-sky-950/75 border border-cyan-300/30 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                        <span class="text-[10px] text-cyan-200 font-bold">🌊 Bip Retrocés</span>
+                        <span id="recovery-time-label" class="text-xs font-extrabold mono text-cyan-300">1.82s (Suau)</span>
+                    </div>
+                    <div class="bg-sky-950/75 border border-cyan-300/30 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                        <span class="text-[10px] text-cyan-200 font-bold">🏆 Palades</span>
+                        <span id="stroke-count" class="text-xs font-extrabold mono text-emerald-300">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls inferiors d'SPM: Presets + Slider + Botó Metrònom Lliure -->
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-2 border-t border-cyan-300/25 z-10">
+                <!-- Presets ràpids -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] font-extrabold text-cyan-200 mr-1 hidden md:inline">RITMES:</span>
+                    <button onclick="setSPM(18)" class="spm-preset px-2 py-1 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-[11px] font-bold text-cyan-100 border border-cyan-400/30">18 <span class="hidden md:inline text-[9px] text-cyan-300">Suau</span></button>
+                    <button onclick="setSPM(22)" class="spm-preset px-2 py-1 rounded-lg bg-amber-400 text-[11px] font-black text-slate-950 border border-white">22 <span class="hidden md:inline text-[9px] text-slate-900">Crema</span></button>
+                    <button onclick="setSPM(25)" class="spm-preset px-2 py-1 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-[11px] font-bold text-cyan-100 border border-cyan-400/30">25 <span class="hidden md:inline text-[9px] text-cyan-300">Fort</span></button>
+                    <button onclick="setSPM(28)" class="spm-preset px-2 py-1 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-[11px] font-bold text-cyan-100 border border-cyan-400/30">28 <span class="hidden md:inline text-[9px] text-amber-300">Festa!</span></button>
+                </div>
+
+                <!-- Botó per activar només el metrònom o provar el so -->
+                <div class="flex items-center gap-1.5 ml-auto">
+                    <label class="flex items-center gap-1.5 text-[11px] font-bold text-cyan-100 cursor-pointer bg-sky-950/80 px-2.5 py-1 rounded-lg border border-cyan-400/30">
+                        <input type="checkbox" id="chk-auto-spm" checked class="accent-amber-400 rounded">
+                        <span>SPM Auto</span>
+                    </label>
+                    <button id="btn-free-pacer" onclick="toggleFreePacer()" class="px-3 py-1.5 rounded-xl bg-sky-900 hover:bg-sky-800 text-xs font-extrabold text-amber-300 border border-amber-300/40 flex items-center gap-1.5 transition">
+                        <i data-lucide="play-circle" class="w-3.5 h-3.5"></i>
+                        <span id="free-pacer-text">Només Metrònom</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLUMNA DRETA (5 cols): PLA DE TREBALL (CRONÒMETRE + BLOCS DEL DIA) -->
+        <section class="col-span-12 sm:col-span-5 marine-panel rounded-2xl p-3 flex flex-col justify-between overflow-hidden">
+            
+            <!-- Bloc Actiu + Cronòmetre -->
+            <div class="bg-sky-950/85 border border-cyan-300/40 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span id="current-block-badge" class="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-400 text-slate-950">BLOC 1/7</span>
+                        <span id="current-block-type" class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-wider">Escalfament</span>
+                    </div>
+                    <h3 id="current-block-name" class="text-sm sm:text-base font-black text-white truncate mt-0.5">Activació articular i rem suau</h3>
+                    <p id="current-block-tip" class="text-[11px] text-cyan-200 line-clamp-1">Esquena recta, activa el melic cap endins al final de cada palada.</p>
+                </div>
+
+                <div class="text-right shrink-0">
+                    <div id="workout-timer" class="text-2xl sm:text-3xl font-black mono text-amber-300 tracking-tight leading-none drop-shadow">05:00</div>
+                    <span id="total-remaining" class="text-[10px] font-bold text-cyan-200 block mt-0.5">Total: 28:00</span>
+                </div>
+            </div>
+
+            <!-- Controls del Cronòmetre d'Entrenament -->
+            <div class="grid grid-cols-4 gap-1.5 my-2 shrink-0">
+                <button onclick="prevBlock()" class="py-2 rounded-xl bg-sky-900/80 hover:bg-sky-800 text-cyan-100 font-extrabold text-xs flex items-center justify-center gap-1 border border-cyan-400/30 active:scale-95 transition">
+                    <i data-lucide="skip-back" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Anterior</span>
+                </button>
+                <button id="btn-start-workout" onclick="toggleWorkout()" class="col-span-2 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-orange-500/30 border border-white/50 active:scale-95 transition">
+                    <i id="icon-workout-play" data-lucide="play" class="w-4 h-4 fill-current"></i>
+                    <span id="text-workout-play">INICIAR SESSIÓ 🎉</span>
+                </button>
+                <button onclick="nextBlock()" class="py-2 rounded-xl bg-sky-900/80 hover:bg-sky-800 text-cyan-100 font-extrabold text-xs flex items-center justify-center gap-1 border border-cyan-400/30 active:scale-95 transition">
+                    <span class="hidden md:inline">Següent</span>
+                    <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+            <!-- Llista d'intervals del dia seleccionat -->
+            <div class="flex-1 overflow-y-auto pr-1 space-y-1.5" id="blocks-container">
+                <!-- Es genera dinàmicament per JS -->
+            </div>
+
+            <!-- Peu de resum del Dia -->
+            <div class="pt-2 mt-1 border-t border-cyan-300/25 flex items-center justify-between text-[11px] text-cyan-100 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span id="day-summary-label">🔥 Cremada (96kg): <strong class="text-amber-300">~350 kcal</strong></span>
+                    <button onclick="completeNextPendingSession()" class="px-2.5 py-0.5 rounded-lg bg-emerald-400/25 hover:bg-emerald-400/40 text-emerald-200 border border-emerald-300/50 text-[10px] font-black flex items-center gap-1 transition" title="Tatxar el dia actual amb focs artificials!">
+                        <i data-lucide="party-popper" class="w-3 h-3"></i> Tatxar Dia 🎆
+                    </button>
+                </div>
+                <button onclick="resetWorkout()" class="text-cyan-200 hover:text-rose-300 font-bold flex items-center gap-1">
+                    <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reiniciar
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE CALENDARI DE DIES I PROGRÉS (8 SETMANES / 16 SESSIONS) -->
+    <div id="calendar-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl">
+            <!-- Capçalera del Calendari -->
+            <div class="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar-check" class="w-5 h-5 text-amber-400"></i>
+                    <div>
+                        <h3 class="font-black text-sm sm:text-base text-white leading-tight">Pla de 8 Setmanes (2 Dies/Setmana)</h3>
+                        <p class="text-[11px] text-slate-400">Fes clic sobre qualsevol sessió per tatxar-la com a completada o carregar-la.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <span id="calendar-stats-text" class="text-xs font-extrabold text-emerald-400 block">0 de 16 completats (0%)</span>
+                        <span id="calendar-kcal-total" class="text-[10px] text-slate-400 mono">0 kcal acumulades</span>
+                    </div>
+                    <button onclick="toggleModal('calendar-modal')" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Barra de progrés general -->
+            <div class="px-4 py-2 bg-slate-900/90 border-b border-slate-800/80 flex items-center gap-3">
+                <div class="flex-1 h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
+                    <div id="calendar-progress-bar" class="h-full rounded-full bg-gradient-to-r from-sky-500 via-emerald-400 to-amber-400 transition-all duration-300" style="width: 0%;"></div>
+                </div>
+                <span id="calendar-ActiveSession-label" class="text-[11px] font-bold text-sky-300 shrink-0">Sessió activa: Setmana 1 · Dia 1</span>
+            </div>
+
+            <!-- Graella de Setmanes i Dies -->
+            <div id="calendar-grid" class="p-3 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                <!-- Generat dinàmicament per JS -->
+            </div>
+
+            <!-- Peu del modal -->
+            <div class="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+                <button onclick="clearAllCompletedDays()" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Esborrar marques
+                </button>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">Quan acabes l'últim bloc d'una sessió es tatxa sola!</span>
+                    <button onclick="toggleModal('calendar-modal')" class="px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs">Tancar i Remar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE TÈCNICA ABDOMINAL I AJUST DE 12 LITRES -->
+    <div id="core-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="font-black text-sm sm:text-base text-white">Guia Biomecànica: Perdre Panxa amb Crivit 12L (184cm / 96kg)</h3>
+                </div>
+                <button onclick="toggleModal('core-modal')" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30">
+                    <h4 class="font-bold text-sky-300 mb-1">💧 Per què 12 Litres al dipòsit Crivit exigeixen bona tècnica?</h4>
+                    <p>Amb 12 litres d'aigua, el dipòsit ofereix una inèrcia alta. Amb la teva alçada (184 cm) i pes (96 kg), tens una palanca molt llarga i molta força d'arrencada. No intentis anar a 32 SPM; mantén entre <strong>20 i 26 SPM</strong> i busca que l'aigua faci un so continu i profund a cada empenta.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <h4 class="font-bold text-orange-400 mb-1">1. El "Layback" Abdominal (Bip d'Empenta)</h4>
+                        <p>Quan les cames s'estiren del tot, inclina el tronc lleugerament enrere (fins a les <strong>11 en punt</strong>, mai estirat del tot) fent servir un <strong>"bracing" abdominal</strong> (com si algú et volgués donar un cop a la panxa). Això converteix cada palada en un crunch isomètric.</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <h4 class="font-bold text-emerald-400 mb-1">2. El Fre del Core (Bip de Retrocés)</h4>
+                        <p>En començar el retrocés, estira primer els braços i inclina el tronc cap endavant (a la <strong>1 en punt</strong>) usant els abdominals inferiors abans de doblegar els genolls. Exhala fort al final de l'empenta i inhala profundament mentre tornes a poc a poc.</p>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                    <h4 class="font-bold text-emerald-300 mb-1">🔥 Fórmula Setmanal per Reduir Perímetre Abdominal</h4>
+                    <p>El rem crema moltes calories perquè mou el 85% de la musculatura del cos. Combinant els intervals de rem amb els blocs de <strong>Planxa i Deadbug de 3 minuts</strong> inclosos al final de cada sessió, enfortiràs la faixa abdominal interna (transvers) perquè la panxa es vegi més plana i ferma.</p>
+                </div>
+            </div>
+            <div class="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex justify-end">
+                <button onclick="toggleModal('core-modal')" class="px-4 py-1.5 rounded-xl bg-sky-500 text-slate-950 font-bold text-xs">Entesos, a remar!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicialitzar icones Lucide
+        lucide.createIcons();
+
+        // ==========================================
+        // PLANS D'ENTRENAMENT (2 DIES / SETMANA)
+        // Dissenyats per a Home 184cm, 96kg, Crivit 12L
+        // ==========================================
+        const WORKOUT_PLANS = {
+            1: {
+                name: "Dia 1: HIIT Metabòlic + Core Isomètric",
+                caloriesEst: 350,
+                blocks: [
+                    {
+                        type: "Escalfament",
+                        name: "Activació Hidràulica i Tècnica",
+                        duration: 300, // 5 min
+                        spm: 19,
+                        tip: "Palades llargues aprofitant els teus 184cm. No tiris d'esquena, empeny amb talons."
+                    },
+                    {
+                        type: "Sèrie Activa 1",
+                        name: "Crema de Greix Sostinguda (Zona 2-3)",
+                        duration: 240, // 4 min
+                        spm: 22,
+                        tip: "Fes sonar l'aigua fort en 1 segon i torna en 2 segons. Melic activat al final."
+                    },
+                    {
+                        type: "HIIT Crema-Panxa",
+                        name: "6x (40s Empenta Forta / 20s Suau)",
+                        duration: 360, // 6 min
+                        spm: 26,
+                        tip: "Durant els 40s busca màxima pressió d'aigua als 12L; als 20s respira fondo sense parar."
+                    },
+                    {
+                        type: "Recuperació Activa",
+                        name: "Rem d'Oxigenació i Control Postural",
+                        duration: 120, // 2 min
+                        spm: 18,
+                        tip: "Baixa pulsacions. Concentra't a frenar el cos amb els abdominals al final de la palada."
+                    },
+                    {
+                        type: "HIIT Crema-Panxa 2",
+                        name: "6x (40s Potència / 20s Suau)",
+                        duration: 360, // 6 min
+                        spm: 27,
+                        tip: "Segon bloc crema-greix. Exhala amb força quan l'ansa toqui sota el pit."
+                    },
+                    {
+                        type: "Core fora del rem",
+                        name: "Circuit Terra: Planxa + Toc d'Espatlla + Deadbug",
+                        duration: 180, // 3 min
+                        spm: 20,
+                        tip: "Baixa de la màquina: 45s Planxa frontal + 45s Deadbug + 45s Planxa lateral."
+                    },
+                    {
+                        type: "Tornada a la calma",
+                        name: "Descompressió Lumbar i Respiració",
+                        duration: 120, // 2 min
+                        spm: 18,
+                        tip: "Rem molt suau deixant anar tensió d'espatlles i trapezi."
+                    }
+                ]
+            },
+            2: {
+                name: "Dia 2: Piràmide de Força-Resistència (12L) + Abs",
+                caloriesEst: 390,
+                blocks: [
+                    {
+                        type: "Escalfament",
+                        name: "Progressió de Palada (Cames → Tronc → Braços)",
+                        duration: 300, // 5 min
+                        spm: 20,
+                        tip: "Comença suau per moure els 12L d'aigua sense sobrecarregar les lumbars."
+                    },
+                    {
+                        type: "Piràmide Nivell 1",
+                        name: "Tracció Pesada i Control del Core",
+                        duration: 240, // 4 min
+                        spm: 21,
+                        tip: "Poca freqüència però molta força de cames a cada bip agut d'empenta."
+                    },
+                    {
+                        type: "Piràmide Nivell 2",
+                        name: "Ritme Aeròbic Intens",
+                        duration: 240, // 4 min
+                        spm: 24,
+                        tip: "Puja el ritme a 24 SPM. Mantén el tronc ferm entre les 11h i la 1h."
+                    },
+                    {
+                        type: "Cim de la Piràmide",
+                        name: "Pic Metabòlic d'Alta Despesa Calòrica",
+                        duration: 180, // 3 min
+                        spm: 27,
+                        tip: "3 minuts intensos! És el moment de màxima despesa calòrica del dia."
+                    },
+                    {
+                        type: "Baixada Piràmide",
+                        name: "Estabilització i Resistència Crema-Greix",
+                        duration: 240, // 4 min
+                        spm: 23,
+                        tip: "Mantingues la tècnica neta ara que hi ha fatiga acumulada."
+                    },
+                    {
+                        type: "Core fora del rem",
+                        name: "Circuit Abs: Hollow Hold + Russian Twist + Planxa",
+                        duration: 240, // 4 min
+                        spm: 20,
+                        tip: "Al terra (2 rondes): 40s Planxa activa + 40s Russian Twist controlat + 40s Pont gluti."
+                    },
+                    {
+                        type: "Tornada a la calma",
+                        name: "Soltar Cames i Estirament en moviment",
+                        duration: 180, // 3 min
+                        spm: 18,
+                        tip: "Deixa que l'aigua giri sola i respira profundament pel nas."
+                    }
+                ]
+            }
+        };
+
+        // ==========================================
+        // ESTAT DE L'APLICACIÓ
+        // ==========================================
+        let currentDay = 1;
+        let currentBlockIndex = 0;
+        let blockTimeRemaining = WORKOUT_PLANS[1].blocks[0].duration;
+        let workoutRunning = false;
+        let freePacerRunning = false;
+        let workoutInterval = null;
+        let isCountingDown = false;
+        let countdownSeconds = 0;
+
+        // Estat del Metrònom SPM i Barra
+        let currentSPM = WORKOUT_PLANS[1].blocks[0].spm;
+        let soundEnabled = true;
+        let audioCtx = null;
+        let strokeCount = 0;
+        let totalSecondsRowed = 0;
+
+        // Pla de 8 setmanes (16 sessions: S1D1, S1D2 ... S8D2)
+        const TOTAL_WEEKS = 8;
+        let activeWeek = 1;
+        let completedSessions = {}; // Ex: { 'W1D1': true, 'W1D2': true }
+
+        // Temporització precisa d'animació de palada (Ràtio 1:2 -> 33.3% Empenta / 66.7% Retrocés)
+        let pacerAnimFrame = null;
+        let cycleStartTime = null;
+        let lastPhaseBeep = null; // 'drive' o 'recovery'
+
+        // ==========================================
+        // GESTIÓ DEL CALENDARI DE DIES COMPLETATS
+        // ==========================================
+        function getSessionKey(week, day) {
+            return `W${week}D${day}`;
+        }
+
+        function toggleSessionComplete(week, day, event) {
+            if (event) event.stopPropagation();
+            const key = getSessionKey(week, day);
+            if (completedSessions[key]) {
+                delete completedSessions[key];
+            } else {
+                completedSessions[key] = true;
+                launchCelebration(`🎉 SESSIÓ S${week}·D${day} COMPLETADA! 🎆`);
+            }
+            updateCalendarUI();
+        }
+
+        function selectSessionFromCalendar(week, day) {
+            activeWeek = week;
+            selectDay(day);
+            updateCalendarUI();
+            toggleModal('calendar-modal');
+        }
+
+        function completeNextPendingSession() {
+            const currentKey = getSessionKey(activeWeek, currentDay);
+            if (!completedSessions[currentKey]) {
+                completedSessions[currentKey] = true;
+            } else {
+                // Si la sessió activa ja estava tatxada, tatxem la primera pendent del calendari
+                for (let w = 1; w <= TOTAL_WEEKS; w++) {
+                    for (let d = 1; d <= 2; d++) {
+                        const k = getSessionKey(w, d);
+                        if (!completedSessions[k]) {
+                            completedSessions[k] = true;
+                            activeWeek = w;
+                            w = TOTAL_WEEKS + 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            launchCelebration(`🏆 DIA TATXAT! GRAN TREBALL AL MAR! 🎆`);
+            updateCalendarUI();
+            // Obrim el calendari perquè l'usuari vegi com s'ha tatxat el dia
+            const modal = document.getElementById('calendar-modal');
+            if (modal.classList.contains('hidden')) {
+                toggleModal('calendar-modal');
+            }
+        }
+
+        function clearAllCompletedDays() {
+            completedSessions = {};
+            activeWeek = 1;
+            updateCalendarUI();
+        }
+
+        function updateCalendarUI() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+
+            let completedCount = 0;
+            let totalKcalAccum = 0;
+            const totalSessions = TOTAL_WEEKS * 2;
+
+            grid.innerHTML = '';
+
+            for (let w = 1; w <= TOTAL_WEEKS; w++) {
+                const d1Key = getSessionKey(w, 1);
+                const d2Key = getSessionKey(w, 2);
+                const d1Done = !!completedSessions[d1Key];
+                const d2Done = !!completedSessions[d2Key];
+
+                if (d1Done) {
+                    completedCount++;
+                    totalKcalAccum += WORKOUT_PLANS[1].caloriesEst;
+                }
+                if (d2Done) {
+                    completedCount++;
+                    totalKcalAccum += WORKOUT_PLANS[2].caloriesEst;
+                }
+
+                const weekAllDone = d1Done && d2Done;
+
+                const card = document.createElement('div');
+                card.className = `rounded-xl border p-2.5 flex flex-col justify-between gap-2 transition ${
+                    weekAllDone
+                        ? 'bg-emerald-950/20 border-emerald-500/40'
+                        : 'bg-slate-950/90 border-slate-800'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
+                        <span class="text-xs font-black uppercase tracking-wider ${weekAllDone ? 'text-emerald-400 line-through' : 'text-sky-400'}">
+                            Setmana ${w}
+                        </span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            weekAllDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-900 text-slate-400'
+                        }">
+                            ${(d1Done ? 1 : 0) + (d2Done ? 1 : 0)}/2 dies
+                        </span>
+                    </div>
+                    <div class="space-y-1.5">
+                        ${renderCalendarDayRow(w, 1, "Dia 1: HIIT + Core", d1Done)}
+                        ${renderCalendarDayRow(w, 2, "Dia 2: Piràmide + Abs", d2Done)}
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+
+            const pct = Math.round((completedCount / totalSessions) * 100);
+            document.getElementById('header-progress-badge').textContent = `${completedCount}/${totalSessions}`;
+            document.getElementById('calendar-stats-text').textContent = `${completedCount} de ${totalSessions} completats (${pct}%)`;
+            document.getElementById('calendar-kcal-total').textContent = `~${totalKcalAccum} kcal cremades`;
+            document.getElementById('calendar-progress-bar').style.width = `${pct}%`;
+            document.getElementById('calendar-ActiveSession-label').textContent = `Sessió activa: Setmana ${activeWeek} · Dia ${currentDay}`;
+
+            lucide.createIcons();
+        }
+
+        function renderCalendarDayRow(week, day, title, isDone) {
+            const isCurrentSelected = (week === activeWeek && day === currentDay);
+            return `
+                <div onclick="toggleSessionComplete(${week}, ${day}, event)" 
+                     class="group p-2 rounded-lg border flex items-center justify-between gap-1.5 cursor-pointer transition ${
+                        isDone
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-slate-400'
+                            : isCurrentSelected
+                                ? 'bg-sky-500/15 border-sky-400/60 text-white'
+                                : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 text-slate-200'
+                     }">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-4 h-4 rounded flex items-center justify-center border shrink-0 transition ${
+                            isDone 
+                                ? 'bg-emerald-500 border-emerald-400 text-slate-950 font-black text-[11px]' 
+                                : 'border-slate-600 group-hover:border-sky-400'
+                        }">
+                            ${isDone ? '✓' : ''}
+                        </div>
+                        <span class="text-[11px] font-bold truncate ${isDone ? 'line-through text-slate-500' : ''}">
+                            ${title}
+                        </span>
+                    </div>
+                    <button onclick="event.stopPropagation(); selectSessionFromCalendar(${week}, ${day})" 
+                            class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-[9px] font-extrabold text-sky-300 shrink-0 transition"
+                            title="Carregar aquest entrenament">
+                        Remar
+                    </button>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // SINTETITZADOR D'ÀUDIO (WEB AUDIO API)
+        // Bip agut i enèrgic per Empenta, Bip greu i suau per Retrocés
+        // ==========================================
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playBeep(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'drive') {
+                    // BIP D'EMPENTA: To agut clar i enèrgic (880 Hz -> La5)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(980, now + 0.09);
+                    gain.gain.setValueAtTime(0.35, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'recovery') {
+                    // BIP DE RETROCÉS: To més greu i calmant (440 Hz -> La4)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(370, now + 0.12);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                    osc.start(now);
+                    osc.stop(now + 0.17);
+                } else if (type === 'blockChange') {
+                    // Doble bip per canvi de bloc d'entrenament
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(660, now);
+                    osc.frequency.setValueAtTime(990, now + 0.15);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.36);
+                } else if (type === 'countdownTick') {
+                    // Bip curt de compte enrere (3, 2, 1)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'countdownGo') {
+                    // Bip llarg i agut d'inici de prova (JA!)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1046.5, now); // Do6
+                    gain.gain.setValueAtTime(0.38, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    osc.start(now);
+                    osc.stop(now + 0.30);
+                } else if (type === 'fanfare') {
+                    // Acord festiu de celebració (Do - Mi - Sol - Do agut)
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'triangle';
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        const start = now + idx * 0.08;
+                        o.frequency.setValueAtTime(freq, start);
+                        g.gain.setValueAtTime(0.28, start);
+                        g.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+                        o.start(start);
+                        o.stop(start + 0.36);
+                    });
+                }
+            } catch (e) {
+                console.warn("Audio no disponible fins a interacció:", e);
+            }
+        }
+
+        // ==========================================
+        // CONFETI I FOCS ARTIFICIALS DE CELEBRACIÓ
+        // ==========================================
+        let toastTimeout = null;
+        function launchCelebration(message = "🎆 PROVA SUPERADA! SEGUEIX AIXÍ! 🎉", isGrandFinale = false) {
+            playBeep('fanfare');
+
+            // Mostrar banner festiu superior
+            const toast = document.getElementById('celebration-toast');
+            const toastText = document.getElementById('celebration-toast-text');
+            if (toast && toastText) {
+                toastText.textContent = message;
+                toast.classList.remove('hidden');
+                if (toastTimeout) clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3800);
+            }
+
+            // Disparar confeti i focs artificials amb canvas-confetti
+            if (typeof confetti === 'function') {
+                const colors = ['#facc15', '#fb923c', '#f43f5e', '#22d3ee', '#34d399', '#ffffff'];
+                
+                // Explosió lateral esquerra i dreta
+                confetti({
+                    particleCount: isGrandFinale ? 90 : 45,
+                    angle: 60,
+                    spread: 65,
+                    origin: { x: 0.05, y: 0.75 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: isGrandFinale ? 90 : 45,
+                    angle: 120,
+                    spread: 65,
+                    origin: { x: 0.95, y: 0.75 },
+                    colors: colors
+                });
+
+                // Si és final d'entrenament o festa gran, afegim focs artificials aeris extra
+                if (isGrandFinale) {
+                    setTimeout(() => {
+                        confetti({
+                            particleCount: 100,
+                            startVelocity: 35,
+                            spread: 360,
+                            origin: { x: 0.5, y: 0.35 },
+                            colors: colors
+                        });
+                    }, 350);
+                }
+            }
+        }
+
+        // ==========================================
+        // COMPTE ENRERE DE 3 SEGONS PER A CADA PROVA
+        // ==========================================
+        function triggerBlockCountdown() {
+            isCountingDown = true;
+            countdownSeconds = 3;
+
+            const overlay = document.getElementById('countdown-overlay');
+            const numEl = document.getElementById('countdown-number');
+            const phaseTitle = document.getElementById('phase-title');
+            const phaseInstruction = document.getElementById('phase-instruction');
+
+            // Aturem temporalment la barra d'SPM mentre dura el 3, 2, 1
+            if (pacerAnimFrame) {
+                cancelAnimationFrame(pacerAnimFrame);
+                pacerAnimFrame = null;
+            }
+
+            overlay.classList.remove('hidden');
+            numEl.textContent = countdownSeconds;
+            phaseTitle.textContent = `⏳ PREPARAT... ${countdownSeconds}`;
+            phaseTitle.className = "text-lg sm:text-xl font-black tracking-tight text-amber-400";
+            phaseInstruction.textContent = "Col·loca les mans a l'ansa i esquena recta!";
+            playBeep('countdownTick');
+        }
+
+        function hideCountdownOverlay() {
+            isCountingDown = false;
+            const overlay = document.getElementById('countdown-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        // ==========================================
+        // MOTOR VISUAL I SONOR DE LA BARRA SPM
+        // ==========================================
+        function updateSPMMetricsUI() {
+            document.getElementById('spm-display').textContent = currentSPM;
+            const cycleDuration = 60 / currentSPM; // segons per palada completa
+            const driveTime = (cycleDuration / 3).toFixed(2);
+            const recoveryTime = ((cycleDuration * 2) / 3).toFixed(2);
+
+            document.getElementById('drive-time-label').textContent = `${driveTime}s (Bip Agut)`;
+            document.getElementById('recovery-time-label').textContent = `${recoveryTime}s (Bip Suau)`;
+
+            // Actualitza estil dels botons preset
+            document.querySelectorAll('.spm-preset').forEach(btn => {
+                const val = parseInt(btn.textContent.trim(), 10);
+                if (val === currentSPM) {
+                    btn.className = "spm-preset px-2 py-1 rounded-lg bg-amber-400 text-[11px] font-black text-slate-950 border border-white shadow";
+                } else {
+                    btn.className = "spm-preset px-2 py-1 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-[11px] font-bold text-cyan-100 border border-cyan-400/30";
+                }
+            });
+        }
+
+        function setSPM(val) {
+            currentSPM = Math.max(14, Math.min(36, val));
+            updateSPMMetricsUI();
+        }
+
+        function adjustSPM(delta) {
+            // Si l'usuari toca manualment + o -, desmarquem l'SPM automàtic perquè mantingui el seu gust
+            setSPM(currentSPM + delta);
+        }
+
+        function startPacerLoop() {
+            if (pacerAnimFrame) cancelAnimationFrame(pacerAnimFrame);
+            cycleStartTime = performance.now();
+            lastPhaseBeep = null;
+            pacerStep(performance.now());
+        }
+
+        function stopPacerLoop() {
+            if (pacerAnimFrame) {
+                cancelAnimationFrame(pacerAnimFrame);
+                pacerAnimFrame = null;
+            }
+            hideCountdownOverlay();
+            const pacerFill = document.getElementById('pacer-fill');
+            const pacerTrack = document.getElementById('pacer-track');
+            const phaseTitle = document.getElementById('phase-title');
+            const phaseInstruction = document.getElementById('phase-instruction');
+
+            pacerFill.style.width = '8%';
+            pacerTrack.classList.remove('drive-glow', 'recovery-glow');
+            phaseTitle.textContent = "PAUSAT / EN ESPERA 🐠";
+            phaseTitle.className = "text-lg sm:text-xl font-black tracking-tight text-white";
+            phaseInstruction.textContent = "Prem 'Iniciar Sessió' o 'Només Metrònom'";
+        }
+
+        function pacerStep(timestamp) {
+            if ((!workoutRunning && !freePacerRunning) || isCountingDown) return;
+
+            const cycleDurationMs = (60 / currentSPM) * 1000;
+            const driveRatio = 1 / 3; // 33.3% del temps és l'empenta explosiva, 66.7% el retrocés controlat
+            const elapsed = (timestamp - cycleStartTime) % cycleDurationMs;
+            const progress = elapsed / cycleDurationMs; // 0.0 a 1.0
+
+            const pacerFill = document.getElementById('pacer-fill');
+            const pacerTrack = document.getElementById('pacer-track');
+            const phaseTitle = document.getElementById('phase-title');
+            const phaseInstruction = document.getElementById('phase-instruction');
+
+            if (progress < driveRatio) {
+                // FASE D'EMPENTA (DRIVE): 0% -> 100% de la barra ràpidament
+                const driveProgress = progress / driveRatio; // 0 a 1
+                // Corba d'acceleració potent inicial (easeOutCubic)
+                const easedDrive = 1 - Math.pow(1 - driveProgress, 2.2);
+                const widthPct = 8 + easedDrive * 92;
+                pacerFill.style.width = `${widthPct}%`;
+                pacerFill.className = "h-full rounded-xl transition-none bg-gradient-to-r from-amber-300 via-orange-500 to-pink-500 relative flex items-center justify-end pr-1.5";
+                
+                pacerTrack.classList.add('drive-glow');
+                pacerTrack.classList.remove('recovery-glow');
+
+                phaseTitle.textContent = "💥 EMPENTA FORTA! (ONA D'ENERGIA)";
+                phaseTitle.className = "text-lg sm:text-xl font-black tracking-tight text-amber-300";
+                phaseInstruction.textContent = "Empeny amb cames → estreny abdomen → ansa al pit (Exhala!)";
+
+                if (lastPhaseBeep !== 'drive') {
+                    lastPhaseBeep = 'drive';
+                    playBeep('drive');
+                }
+            } else {
+                // FASE DE RETROCÉS (RECOVERY): 100% -> 8% de la barra el doble de lent
+                const recProgress = (progress - driveRatio) / (1 - driveRatio); // 0 a 1
+                const widthPct = 100 - (recProgress * 92);
+                pacerFill.style.width = `${widthPct}%`;
+                pacerFill.className = "h-full rounded-xl transition-none bg-gradient-to-r from-cyan-400 via-sky-300 to-emerald-300 relative flex items-center justify-end pr-1.5";
+
+                pacerTrack.classList.add('recovery-glow');
+                pacerTrack.classList.remove('drive-glow');
+
+                phaseTitle.textContent = "🌊 RETROCÉS SUAI I CONTROLAT (2x)";
+                phaseTitle.className = "text-lg sm:text-xl font-black tracking-tight text-cyan-200";
+                phaseInstruction.textContent = "Allarga braços → inclina tronc → flexiona genolls (Inhala!)";
+
+                if (lastPhaseBeep !== 'recovery') {
+                    lastPhaseBeep = 'recovery';
+                    playBeep('recovery');
+                    strokeCount++;
+                    document.getElementById('stroke-count').textContent = strokeCount;
+                }
+            }
+
+            pacerAnimFrame = requestAnimationFrame(pacerStep);
+        }
+
+        // Activar només el metrònom sense córrer el cronòmetre de la sessió
+        function toggleFreePacer() {
+            initAudio();
+            freePacerRunning = !freePacerRunning;
+            const btnText = document.getElementById('free-pacer-text');
+            const btn = document.getElementById('btn-free-pacer');
+
+            if (freePacerRunning) {
+                btnText.textContent = "Aturar Metrònom";
+                btn.className = "px-3 py-1.5 rounded-xl bg-orange-500 text-slate-950 text-xs font-black flex items-center gap-1.5 transition";
+                startPacerLoop();
+            } else {
+                btnText.textContent = "Només Metrònom";
+                btn.className = "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-sky-300 border border-sky-500/30 flex items-center gap-1.5 transition";
+                if (!workoutRunning) stopPacerLoop();
+            }
+        }
+
+        // ==========================================
+        // GESTIÓ DEL PLA DE TREBALL I CRONÒMETRE
+        // ==========================================
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function selectDay(dayNum) {
+            if (workoutRunning) toggleWorkout();
+            currentDay = dayNum;
+            currentBlockIndex = 0;
+            blockTimeRemaining = WORKOUT_PLANS[currentDay].blocks[0].duration;
+
+            // Pestanyes UI
+            const tab1 = document.getElementById('tab-day1');
+            const tab2 = document.getElementById('tab-day2');
+            if (dayNum === 1) {
+                tab1.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 shadow";
+                tab2.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 text-cyan-100 hover:text-white";
+            } else {
+                tab2.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 shadow";
+                tab1.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 text-cyan-100 hover:text-white";
+            }
+
+            document.getElementById('day-summary-label').innerHTML = 
+                `🔥 Cremada (96kg): <strong class="text-amber-300">~${WORKOUT_PLANS[currentDay].caloriesEst} kcal</strong>`;
+
+            loadBlock(0);
+            renderBlocksList();
+            updateCalendarUI();
+        }
+
+        function loadBlock(index) {
+            const blocks = WORKOUT_PLANS[currentDay].blocks;
+            if (index < 0 || index >= blocks.length) return;
+            currentBlockIndex = index;
+            const block = blocks[index];
+            blockTimeRemaining = block.duration;
+
+            document.getElementById('current-block-badge').textContent = `BLOC ${index + 1}/${blocks.length}`;
+            document.getElementById('current-block-type').textContent = block.type;
+            document.getElementById('current-block-name').textContent = block.name;
+            document.getElementById('current-block-tip').textContent = block.tip;
+            document.getElementById('workout-timer').textContent = formatTime(blockTimeRemaining);
+
+            if (document.getElementById('chk-auto-spm').checked) {
+                setSPM(block.spm);
+            }
+
+            updateTotalRemainingUI();
+            renderBlocksList();
+        }
+
+        function updateTotalRemainingUI() {
+            const blocks = WORKOUT_PLANS[currentDay].blocks;
+            let totalSec = blockTimeRemaining;
+            for (let i = currentBlockIndex + 1; i < blocks.length; i++) {
+                totalSec += blocks[i].duration;
+            }
+            document.getElementById('total-remaining').textContent = `Restant: ${formatTime(totalSec)}`;
+        }
+
+        function renderBlocksList() {
+            const container = document.getElementById('blocks-container');
+            const blocks = WORKOUT_PLANS[currentDay].blocks;
+            container.innerHTML = '';
+
+            blocks.forEach((b, idx) => {
+                const isActive = idx === currentBlockIndex;
+                const isDone = idx < currentBlockIndex;
+
+                const item = document.createElement('div');
+                item.onclick = () => {
+                    loadBlock(idx);
+                    if (workoutRunning) {
+                        triggerBlockCountdown();
+                    }
+                };
+                item.className = `p-2 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${
+                    isActive 
+                        ? 'bg-amber-400/20 border-amber-300 text-white shadow-md' 
+                        : isDone 
+                            ? 'bg-emerald-950/40 border-emerald-400/30 text-emerald-200/70' 
+                            : 'bg-sky-950/65 border-cyan-300/25 text-cyan-50 hover:border-cyan-300/60'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
+                            isActive ? 'bg-amber-400 text-slate-950' : isDone ? 'bg-emerald-400 text-slate-950' : 'bg-sky-800 text-cyan-200'
+                        }">
+                            ${isDone ? '✓' : idx + 1}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-extrabold truncate">${b.name}</p>
+                            <p class="text-[10px] text-cyan-200/90 truncate">${b.type} · ${b.tip}</p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0 flex items-center gap-1.5">
+                        <span class="px-1.5 py-0.5 rounded bg-sky-900/90 border border-cyan-300/40 text-[10px] font-extrabold mono text-amber-300">${b.spm} SPM</span>
+                        <span class="text-xs font-extrabold mono w-11 text-right text-white">${formatTime(b.duration)}</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleWorkout() {
+            initAudio();
+            workoutRunning = !workoutRunning;
+            const btn = document.getElementById('btn-start-workout');
+            const text = document.getElementById('text-workout-play');
+
+            if (workoutRunning) {
+                text.textContent = "PAUSAR SESSIÓ";
+                btn.className = "col-span-2 py-2 rounded-xl bg-amber-300 hover:bg-amber-200 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-amber-400/30 active:scale-95 transition";
+                
+                // Inicia els 3 segons de compte enrere abans d'arrencar la prova
+                triggerBlockCountdown();
+
+                workoutInterval = setInterval(() => {
+                    // Gestió dels 3 segons previs a cada bloc
+                    if (isCountingDown) {
+                        if (countdownSeconds > 1) {
+                            countdownSeconds--;
+                            document.getElementById('countdown-number').textContent = countdownSeconds;
+                            document.getElementById('phase-title').textContent = `⏳ PREPARAT... ${countdownSeconds}`;
+                            playBeep('countdownTick');
+                        } else {
+                            // S'acaba el compte enrere: arrenca el bloc i el metrònom!
+                            hideCountdownOverlay();
+                            playBeep('countdownGo');
+                            startPacerLoop();
+                        }
+                        return;
+                    }
+
+                    totalSecondsRowed++;
+                    // Estimació calòrica per a home de 96kg remant a intensitat moderada-alta (~12.5 kcal/min)
+                    const kcal = Math.round((totalSecondsRowed / 60) * 12.5);
+                    document.getElementById('kcal-counter').textContent = kcal;
+
+                    if (blockTimeRemaining > 1) {
+                        blockTimeRemaining--;
+                        document.getElementById('workout-timer').textContent = formatTime(blockTimeRemaining);
+                        updateTotalRemainingUI();
+                    } else {
+                        // S'acaba l'exercici actual -> Confeti + Fanfàrria!
+                        const blocks = WORKOUT_PLANS[currentDay].blocks;
+                        if (currentBlockIndex < blocks.length - 1) {
+                            launchCelebration(`🎆 BLOC ${currentBlockIndex + 1} SUPERAT! PREPARA EL SEGÜENT! 🎉`, false);
+                            loadBlock(currentBlockIndex + 1);
+                            triggerBlockCountdown();
+                        } else {
+                            // Sessió completada! Gran festa final de focs artificials i tatxat automàtic
+                            const completedKey = getSessionKey(activeWeek, currentDay);
+                            completedSessions[completedKey] = true;
+                            updateCalendarUI();
+                            launchCelebration(`🏆 SESSIÓ S${activeWeek}·D${currentDay} COMPLETADA! ETS UN CAMPIÓ! 🎆`, true);
+                            toggleWorkout();
+                            document.getElementById('phase-title').textContent = `🏆 SESSIÓ S${activeWeek}·D${currentDay} TATXADA! 🎆`;
+                        }
+                    }
+                }, 1000);
+            } else {
+                text.textContent = "REPRENDRE SESSIÓ 🎉";
+                btn.className = "col-span-2 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-orange-500/30 border border-white/50 active:scale-95 transition";
+                clearInterval(workoutInterval);
+                hideCountdownOverlay();
+                if (!freePacerRunning) stopPacerLoop();
+            }
+        }
+
+        function prevBlock() {
+            if (currentBlockIndex > 0) {
+                loadBlock(currentBlockIndex - 1);
+            } else {
+                loadBlock(0);
+            }
+            if (workoutRunning) triggerBlockCountdown();
+        }
+
+        function nextBlock() {
+            const blocks = WORKOUT_PLANS[currentDay].blocks;
+            if (currentBlockIndex < blocks.length - 1) {
+                loadBlock(currentBlockIndex + 1);
+                if (workoutRunning) triggerBlockCountdown();
+            }
+        }
+
+        function resetWorkout() {
+            if (workoutRunning) toggleWorkout();
+            strokeCount = 0;
+            totalSecondsRowed = 0;
+            document.getElementById('stroke-count').textContent = '0';
+            document.getElementById('kcal-counter').textContent = '0';
+            document.getElementById('text-workout-play').textContent = "INICIAR SESSIÓ";
+            loadBlock(0);
+        }
+
+        // ==========================================
+        // UTILITATS: SO, MODAL I PANTALLA COMPLETA
+        // ==========================================
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('btn-sound');
+            btn.innerHTML = soundEnabled 
+                ? '<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>' 
+                : '<i data-lucide="volume-x" class="w-4 h-4 text-rose-400"></i>';
+            lucide.createIcons();
+            if (soundEnabled) playBeep('drive');
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        // Inicialització en carregar la pàgina
+        window.onload = () => {
+            selectDay(1);
+            updateSPMMetricsUI();
+            updateCalendarUI();
+        };
+    </script>
+</body>
+</html>
